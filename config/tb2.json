@@ -1,0 +1,11 @@
+{
+  "name" : "Thunderbird 2",
+  "ToF" : {
+      "udp" : {
+          "address" : "127.0.0.1",
+          "port"    : "5555"
+      },
+      "sensors" : 
+        [ { "name" : "front", "i2cAddress" : "0x29", "xshut" : 0 } ]
+    }
+}
