@@ -21,6 +21,9 @@ Press Ctrl+C to exit.
 ToFSensors = [ ]
 ToFSensorsAddresses = [ 0x20, 0x21, 0x30, 0x31 ]
 
+UPDATE_TIME_MICROS = 66000
+INTER_MEASUREMENT_PERIOD_MILLIS = 70
+
 # Open and start the VL53L1X sensor.
 # If you've previously used change-address.py then you
 # should use the new i2c address here.
@@ -30,7 +33,8 @@ ToFSensorsAddresses = [ 0x20, 0x21, 0x30, 0x31 ]
 for address in ToFSensorsAddresses:
   tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=address)
   tof.open()
-  tof.start_ranging(1)
+  tof.set_timing(UPDATE_TIME_MICROS, INTER_MEASUREMENT_PERIOD_MILLIS)
+  tof.start_ranging(0)
 
   ToFSensors.append(tof)
 
