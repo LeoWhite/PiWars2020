@@ -14,7 +14,7 @@ from threading import Thread
 import VL53L1X
 
 # Defines and constants
-JSON_CONFIG_FILE='/home/pi/Programming/PiWars2020/config/tb2.json'
+JSON_CONFIG_FILE='../config/tb2.json'
 UPDATE_TIME_MICROS = 10000
 INTER_MEASUREMENT_PERIOD_MILLIS = 20
 

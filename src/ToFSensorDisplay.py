@@ -13,7 +13,7 @@ from threading import Thread
 import time
 
 # Defines and constants
-JSON_CONFIG_FILE='/home/pi/Programming/PiWars2020/config/tb2.json'
+JSON_CONFIG_FILE='../config/tb2.json'
 
 # Thread that monitors for UDP packets in the background
 class UDPMonitorThread(Thread):
