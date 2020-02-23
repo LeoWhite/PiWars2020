@@ -10,12 +10,38 @@ import signal
 import socket
 import sys
 import time
+from threading import Thread
 import VL53L1X
 
 # Defines and constants
 JSON_CONFIG_FILE='/home/pi/Programming/PiWars2020/config/tb2.json'
 UPDATE_TIME_MICROS = 10000
 INTER_MEASUREMENT_PERIOD_MILLIS = 20
+
+class ToFMonitorThread(Thread):
+    def __init__(self, UDPAddress, name, address):
+        Thread.__init__(self)
+        self._udp = UDPAddress
+        self._name = name
+        self._address = address
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=self._address)
+        self._tof.open()
+        self._tof.set_timing(UPDATE_TIME_MICROS, INTER_MEASUREMENT_PERIOD_MILLIS)
+
+
+    def run(self):
+        message = { "name" : self._name,
+                    "distance" : 0,
+                    "time" : 0 
+                  }
+        self._tof.start_ranging(mode=VL53L1X.VL53L1xDistanceMode.SHORT)
+        while True:
+          message["distance"] = self._tof.get_distance()
+          message["time"] = time.time() 
+          sock.sendto(json.dumps(message).encode(), self._udp)
+
+
 
 # Details on the ToF sensors we are monitoring
 ToFSensors = [ ]
@@ -47,24 +73,14 @@ for address in config['ToF']['sensors']:
     i2cAddress = int(address['i2cAddress'], 16)
 
     # Initialise the sensor
-    tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=i2cAddress)
-    tof.open()
-    tof.set_timing(UPDATE_TIME_MICROS, INTER_MEASUREMENT_PERIOD_MILLIS)
-    tof.start_ranging(mode=VL53L1X.VL53L1xDistanceMode.SHORT)
-
-    ToFSensors.append( { "tof" : tof, "sensor" : address } )
+    sensorMonitor = ToFMonitorThread(udpAddress, address["name"], i2cAddress)
+    sensorMonitor.daemon = True
+    sensorMonitor.start()
+    ToFSensors.append(sensorMonitor)
 
 # Read in the data
 running = True
 
 while running:
+  time.sleep(10)
   results = []
-  for sensor in ToFSensors:
-    results.append(sensor["tof"].get_distance())
-
-    #print("Distance: \t[{}]".format(results[0]))
-    message = { "name" : sensor["sensor"]["name"],
-                "distance" : results[0],
-                "time" : time.time() 
-                }
-  sock.sendto(json.dumps(message).encode(), udpAddress)
