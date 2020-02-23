@@ -33,6 +33,12 @@ class UDPMonitorThread(Thread):
           message = json.loads(data)
           if message["name"] == "front_left":
             self._FLText.value = message["distance"]
+          elif message["name"] == "front_right":
+            self._FRText.value = message["distance"]
+          elif message["name"] == "left":
+            self._LText.value = message["distance"]
+          elif message["name"] == "right":
+            self._RText.value = message["distance"]
 
 # Details on the ToF sensors we are monitoring
 ToFSensors = [ ]
