@@ -6,6 +6,6 @@
           "port"    : "5555"
       },
       "sensors" : 
-        [ { "name" : "front", "i2cAddress" : "0x29", "xshut" : 0 } ]
+        [ { "name" : "front_left", "i2cAddress" : "0x29", "xshut" : 0 } ]
     }
 }
