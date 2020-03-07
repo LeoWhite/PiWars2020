@@ -8,8 +8,7 @@ import ZeroBorg3 as ZeroBorg
 
 class MotorZeroBorg(MotorBase):
     def __init__(self):
-        # As this is a stubbed out class there isn't anything we need to do here
-        # Possibly define some max ranges or other globals
+        # Setup the Zeroborg obeject
         self._zb = ZeroBorg.ZeroBorg()
         self._zb.i2cAddress = 0x41
         self._zb.Init()
