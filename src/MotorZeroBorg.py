@@ -19,13 +19,11 @@ class MotorZeroBorg(MotorBase):
 
     def _left(self, speed):
         """ Sets the speed of the left motor, in the range of -1.0 to 1.0"""
-        print("_left"+str(speed))
         self._zb.SetMotor1(speed)
 
 
     def _right(self, speed):
         """ Sets the speed of the right motor, in the range of -1.0 to 1.0"""
-        print("_right"+str(speed))
         self._zb.SetMotor2(speed)
         
 

@@ -6,17 +6,17 @@ class MotorBase(object):
     def __init__(self):
         # As this is a stubbed out class there isn't anything we need to do here
         # Possibly define some max ranges or other globals
-        print("init")
+        #print("MotorBase init")
+        return 
 
     def set_left(self, speed):
         """ Sets the speed of the left motor, in the range of -1.0 to 1.0"""
-        print("set_left"+str(speed))
         self._left(speed)
 
 
     def set_right(self, speed):
         """ Sets the speed of the right motor, in the range of -1.0 to 1.0"""
-        print("set_right"+str(speed))
+        #print("set_right"+str(speed))
         self._right(speed)
         
 
