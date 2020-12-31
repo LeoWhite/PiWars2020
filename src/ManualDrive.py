@@ -1,8 +1,8 @@
 from approxeng.input.selectbinder import ControllerResource
 
 import atexit
-from MotorZeroBorg import MotorZeroBorg as Motor
-#from MotorRedBoard import MotorRedBoard as Motor
+#from MotorZeroBorg import MotorZeroBorg as Motor
+from MotorRedBoard import MotorRedBoard as Motor
 
 
 # Allows direct manual control of TB2
