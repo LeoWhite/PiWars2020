@@ -7,5 +7,29 @@
       },
       "sensors" : 
         [ { "name" : "front_left", "i2cAddress" : "0x29", "xshut" : 0 } ]
+    },
+  "RedBoard" : 
+  {
+    "config" : 
+    {
+      "motors": {
+        "0": {
+          "invert": true,
+          "scale": 1.0
+        },
+        "1": {
+          "invert": true,
+          "scale": 1.0
+        },
+        "2": {
+          "invert": false,
+          "scale": 1.0
+        },
+        "3": {
+          "invert": false,
+          "scale": 1.0
+        }
+      }
     }
+  }
 }
