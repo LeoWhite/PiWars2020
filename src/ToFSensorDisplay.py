@@ -7,13 +7,14 @@
 # Imports required for this porogram
 from guizero import App, Picture, Text
 import json
+import yaml
 import socket
 import sys
 from threading import Thread
 import time
 
 # Defines and constants
-JSON_CONFIG_FILE='../config/tb2.json'
+YAML_CONFIG_FILE='../config/config.yaml'
 
 # Thread that monitors for UDP packets in the background
 class UDPMonitorThread(Thread):
@@ -43,9 +44,9 @@ class UDPMonitorThread(Thread):
 # Details on the ToF sensors we are monitoring
 ToFSensors = [ ]
 
-# Read in the JSON config file
-with open(JSON_CONFIG_FILE) as json_data_file:
-    config = json.load(json_data_file)
+# Read in the YAML config file
+with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
+    config = yaml.safe_load(yaml_data_file)
 
 
 # Create a socket to broadcast the messages on

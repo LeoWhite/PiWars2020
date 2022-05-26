@@ -6,6 +6,7 @@
 
 # Imports required for this porogram
 import json
+import yaml
 import signal
 import socket
 import sys
@@ -14,7 +15,7 @@ from threading import Thread
 import VL53L1X
 
 # Defines and constants
-JSON_CONFIG_FILE='../config/tb2.json'
+YAML_CONFIG_FILE='../config/config.yaml'
 UPDATE_TIME_MICROS = 10000
 INTER_MEASUREMENT_PERIOD_MILLIS = 20
 
@@ -46,10 +47,9 @@ class ToFMonitorThread(Thread):
 # Details on the ToF sensors we are monitoring
 ToFSensors = [ ]
 
-# Read in the JSON config file
-with open(JSON_CONFIG_FILE) as json_data_file:
-    config = json.load(json_data_file)
-print(config)
+# Read in the YAML config file
+with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
+    config = yaml.safe_load(yaml_data_file)
 
 # Setup an exit handler to tidy up if anything goes wrong
 def exit_handler(signal, frame):
@@ -64,13 +64,13 @@ def exit_handler(signal, frame):
 signal.signal(signal.SIGINT, exit_handler)
 
 # Create a socket to broadcast the messages on
-udpAddress = ( config["ToF"]["udp"]["address"], int(config["ToF"]["udp"]["port"]) )
+udpAddress = ( config["ToF"]["udp"]["address"], config["ToF"]["udp"]["port"] )
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Build up a list of the sensors
 for address in config['ToF']['sensors']:
     # Convert the string HEX address to a number
-    i2cAddress = int(address['i2cAddress'], 16)
+    i2cAddress = address['i2cAddress']
 
     # Initialise the sensor
     sensorMonitor = ToFMonitorThread(udpAddress, address["name"], i2cAddress)

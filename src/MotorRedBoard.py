@@ -2,14 +2,14 @@
 from MotorBase import MotorBase
 import sys
 import redboard
-import json
+import yaml
 
 # Defines and constants
-JSON_CONFIG_FILE='../config/config.json'
+YAML_CONFIG_FILE='../config/config.json'
 
-# Read in the JSON config file
-with open(JSON_CONFIG_FILE) as json_data_file:
-    config = json.load(json_data_file)
+# Read in the YAML config file
+with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
+    config = yaml.safe_load(yaml_data_file)
 
 # A Motor class used for abstraction purposes
 
@@ -17,7 +17,7 @@ class MotorRedBoard(MotorBase):
     def __init__(self):
         print("RedBoard init")
         self._redBoard = redboard.RedBoard()
-        self._redBoard.config=config["RedBoard"]["config"]
+        self._redBoard.config=config["RedBoard"]
 
 
     def _left(self, speed):

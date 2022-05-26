@@ -1,0 +1,21 @@
+name:
+  "Tractor Tom"
+
+ToF:
+  udp:
+    address : "127.0.0.1"
+    port : 5555
+    
+  sensors:
+    - { name: "front_left", i2cAddress: 0x29, xshut : 0 }
+    
+RedBoard:
+  motors:
+    0:
+      invert: true
+      scale: 1.0
+    1:
+      invert: true
+      scale: 1.0
+
+

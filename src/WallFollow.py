@@ -2,6 +2,7 @@ import atexit
 import json
 import queue
 import socket
+import yaml
 
 from pi_controller import PIController
 from threading import Thread
@@ -10,7 +11,7 @@ from MotorZeroBorg import MotorZeroBorg as Motor
 #from MotorRedBoard import MotorRedBoard as Motor
 
 # Defines and constants
-JSON_CONFIG_FILE='../config/tb2.json'
+YAML_CONFIG_FILE='../config/config.yaml'
 MIN_SIDE_DISTANCE=100
 
 # Thread that monitors for UDP packets in the background
@@ -44,12 +45,12 @@ class WallFollowBehaviour(object):
     # Cache the base speed
     self._speed = speed
     
-    # Read in the JSON config file
-    with open(JSON_CONFIG_FILE) as json_data_file:
-        self._config = json.load(json_data_file)
+    # Read in the YAML config file
+    with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
+      config = yaml.safe_load(yaml_data_file)
 
     # Work out the UDP Address to listen on
-    udpAddress = ( self._config["ToF"]["udp"]["address"], int(self._config["ToF"]["udp"]["port"]) )
+    udpAddress = ( self._config["ToF"]["udp"]["address"], self._config["ToF"]["udp"]["port"] )
 
     # Launch the UDP/ToF monitor
     self._tofMonitor = UDPMonitorThread(udpAddress, self._messageQueue)
