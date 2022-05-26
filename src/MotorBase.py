@@ -19,7 +19,9 @@ class MotorBase(object):
         #print("set_right"+str(speed))
         self._right(speed)
         
-
+    def set_servo(self, servo, range):
+        self._set_servo(servo, self._clip_speed(range))
+        
     def stop_all(self):
         # Stops both motors
         print("set_stop")

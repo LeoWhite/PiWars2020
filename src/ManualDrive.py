@@ -9,6 +9,7 @@ from MotorRedBoard import MotorRedBoard as Motor
 class ManualDriveBehaviour(object):
   def __init__(self, Motor):
     self._motor = Motor
+    self._lid = 0
     
     # Make sure we release it at exit
     atexit.register(self.shutdown)
@@ -20,6 +21,18 @@ class ManualDriveBehaviour(object):
     # Attempt to find a joystick
     with ControllerResource() as joystick:    
       while running and joystick.connected:
+        presses = joystick.check_presses()
+
+        if presses['cross']:
+          print("cross pressed. Mode", self._lid)
+          if self._lid == 0:
+            self._lid = 1;
+            self._motor.set_servo(0, 1);
+          else:
+            self._lid = 0;
+            self._motor.set_servo(0, -1);
+ 
+
         left_y, right_y = joystick['ly', 'ry']
         #print("", left_y, "x", right_y)
         self._motor.set_left(left_y)
