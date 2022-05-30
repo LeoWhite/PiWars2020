@@ -5,7 +5,7 @@ import redboard
 import yaml
 
 # Defines and constants
-YAML_CONFIG_FILE='../config/config.json'
+YAML_CONFIG_FILE='../config/config.yaml'
 
 # Read in the YAML config file
 with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:

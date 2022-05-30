@@ -12,10 +12,10 @@ ToF:
 RedBoard:
   motors:
     0:
-      invert: true
+      invert: false
       scale: 1.0
     1:
-      invert: true
+      invert: false
       scale: 1.0
 
 
