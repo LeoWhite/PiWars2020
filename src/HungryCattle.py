@@ -3,6 +3,7 @@ import json
 import queue
 import socket
 import yaml
+import time
 
 from pi_controller import PIController
 from threading import Thread
@@ -24,6 +25,20 @@ ColourStruct = namedtuple("ColourStruct", "colour low high")
 RED=ColourStruct("red", np.array([160,100,50]), np.array([179,255,255]))
 GREEN=ColourStruct("green", np.array([60-20,100,50]), np.array([60+20,255,255]))
 BLUE=ColourStruct("blue", np.array([100,100,50]), np.array([120,255,255]))
+
+
+# The planned route
+# 1 = Cattle trough 1 (Red)
+# 2 - Cattle trough 2 (Blue)
+# 3 - Cattle trough 3
+# L - Turn left 90
+# R - Turn right 90
+# B - Back up
+# U - U-turn
+# A - Activate feeder
+# 0 - Barn
+# FULL ROUTE="U1ABL2ABR3AU"
+ROUTE="LR"
 
 
 # Thread that monitors for UDP packets in the background
@@ -73,6 +88,7 @@ class HungeryCattle(object):
     atexit.register(self.shutdown)
 
     # Throw away the first few results, to allow the sensor to settle down.
+    print("Waiting for ToF sensor to settle down")
     count = 3
     while count > 0:
       message = self._messageQueue.get(True)
@@ -129,27 +145,38 @@ class HungeryCattle(object):
     #self._motor.set_left(self._speed)
     #self._motor.set_right(self._speed)
 
-    # and start processing results
-    while running:
-      # Wait for the next distance update
-      message = self._messageQueue.get(True)
 
-      # Calculate the error and update the PID values
-      error = message['distance'] - MIN_SIDE_DISTANCE
-      adjustment = controller.get_value(error)
-      print(message['distance'],"e:",error, " a:", adjustment, "s:", self._speed - adjustment)
-
-      # Update motors
-      #self._motor.set_right(self._speed - adjustment)
-
-      # If the 'error' value is less than zero, we are close enough
-      if error <= 0:
-        print("Stopping!")
-        running = False
+    # Iterate over each direction
+    for step in ROUTE:
+      self.processStep(step)      
 
 
   def shutdown(self):
       self._motor.stop_all()
+
+  def turn_90_degrees(self, direction):
+    # Default speed = turn right
+    speed = self._speed
+    
+    # Do we want to go left?
+    if direction == 1:
+      speed = -speed
+    
+    self._motor.set_left(speed)
+    self._motor.set_right(-speed)
+    time.sleep(0.5)
+    self._motor.stop_all()
+    
+  def processStep(self, step):
+    if step == "L" :
+        self.turn_90_degrees(1)
+    elif step == "R" :
+        self.turn_90_degrees(0)
+    else:
+      print("Unknown step ["+step+"]")
+
+
+
 
 
 if __name__ == '__main__':
