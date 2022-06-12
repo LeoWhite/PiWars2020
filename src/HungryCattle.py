@@ -20,7 +20,8 @@ from pi_controller import PIController
 
 # Defines and constants
 YAML_CONFIG_FILE='../config/config.yaml'
-TROUGH_DISTANCE=100
+TROUGH_SAFE_DISTANCE=200
+TROUGH_LOADING_DISTANCE=50
 ColourStruct = namedtuple("ColourStruct", "colour low high")
 
 RED=ColourStruct("red", np.array([160,100,50]), np.array([179,255,255]))
@@ -87,7 +88,7 @@ class HungryCattle(object):
       # IMPROVE: Abort after X failures
       return True
     # Not yet close enough?
-    elif distance > TROUGH_DISTANCE:
+    elif distance > TROUGH_SAFE_DISTANCE:
       print("Still driving")
       return True
      
@@ -109,24 +110,22 @@ class HungryCattle(object):
     
   def approach_trough(self, colour):
     print("Seraching for colour {}".format(colour.colour))
-    # Search for the colour
-    for frame in pi_camera_stream.start_stream(self._tom._camera):
-      # Check for colour
-      (x, y), radius = self._tom.process_frame(frame, colour.low, colour.high)
-      
-      print("Radius {}".format(radius))
-      if radius > 20:
-        break
-    
-      # Turn 45 to next detection point
-      speed = 0.4
-      self._tom.set_left(-speed)
-      self._tom.set_right(speed)
-      time.sleep(0.1)
-      self._tom.stop_all()
+
 
     # Now drive to the colour
-    self._tom.drive_to_colour(self.driveCallback, colour.low, colour.high, 0.3)
+    self._tom.aim_at_colour(colour.low, colour.high, 1, self._speed)
+    self._tom.drive_to_colour(self.driveCallback, colour.low, colour.high, self._speed)
+    
+    # Creep forwards
+    while self._tom.readToFSensor("front_left") > TROUGH_LOADING_DISTANCE:
+      print("Crreeping {}".format(self._tom.readToFSensor("front_left")))
+      self._tom.set_left(0.1)
+      self._tom.set_right(0.1)
+      time.sleep(0.1)
+    
+    print("Creeping done")
+    self._tom.stop_all()
+      
     
 
   def processStep(self, step):
