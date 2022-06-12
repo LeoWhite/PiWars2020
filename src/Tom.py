@@ -110,9 +110,9 @@ class Tom(Motor):
 
 
   def process_frame(self, frame_orig, low_range, high_range):
-      # Crop the frame
-      frame = frame_orig
-      
+      # Crop the frame to avoid distractions
+      frame = frame_orig[100:200, 0:320]
+
       
       #frame = frame_orig
       # Find the largest enclosing circle
@@ -130,6 +130,54 @@ class Tom(Motor):
       return coordinates, radius
 
 
+  def aim_at_colour(self, low_range, high_range, direction=1, speed=0.5):
+    
+      # start the loop
+      for frame in pi_camera_stream.start_stream(self._camera):
+        # Process the frame
+        (x, y), radius = self.process_frame(frame, low_range, high_range)
+        
+          
+        # Work out how far from the center it is
+        direction_error = self.center - x
+
+        if self._debug:
+          print("radius: {} direction_error: {}".format(radius, direction_error))
+
+        # Have we found nothing?
+        if radius == 0:
+          # Do we want to go left?
+          if direction == 1:
+            targetSpeed = -speed
+          else:
+            targetSpeed = speed
+            
+          self.set_left(targetSpeed)
+          self.set_right(-targetSpeed)
+          
+        # Too far left?
+        elif direction_error > 5:
+            # Move left 
+            targetSpeed = -speed
+              
+            # Now produce left and right motor speeds
+            self.set_left(targetSpeed)
+            self.set_right(-targetSpeed)
+        # Too far right?
+        elif direction_error < -5:
+            # Move right
+            targetSpeed = speed
+              
+            # Now produce left and right motor speeds
+            self.set_left(targetSpeed)
+            self.set_right(-targetSpeed)
+        # Close enough, so stop
+        else:
+            print("aim_at_colour:Stopping")
+            self.stop_all()
+            break
+  
+  
   def drive_to_colour(self, callback, low_range, high_range, speed=0.75):
       # Direction controller
       controller = PIController(proportional_constant=0.0015, integral_constant=0.0000, windup_limit=400)
@@ -152,8 +200,8 @@ class Tom(Motor):
             direction_value = controller.get_value(direction_error)
             
             if self._debug:
-              print("radius: %d, radius_error: %d direction_error: %d, direction_value: %.2f" %
-                  (radius, radius_error, direction_error, direction_value))
+              print("radius: %d, radius_error: %d direction_error: %d, direction_value: %.2f speed %.2f" %
+                  (radius, radius_error, direction_error, direction_value, speed + direction_value))
             
             # Now produce left and right motor speeds
             self.set_left(speed - direction_value)
