@@ -1,4 +1,8 @@
 import atexit
+import yaml
+import json
+import socket
+import time
 
 from pi_controller import PIController
 from MotorRedBoard import MotorRedBoard as Motor
@@ -37,10 +41,15 @@ class UDPMonitorThread(Thread):
 
     
 # Allows direct manual control of TB2
-class Tom(object):
-  def __init__(self, Motor):
-    self._motor = Motor
+class Tom(Motor):
+  correct_radius = 120
+  center = 160
 
+  _debug = True
+  
+  def __init__(self):
+    Motor.__init__(self)
+    
     # Read in the YAML config file
     with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
       self._config = yaml.safe_load(yaml_data_file)
@@ -69,12 +78,17 @@ class Tom(object):
         time.sleep(0.1)
 
 
+    # Start the camera
+    # IMPROVE: Only trigger if needed?
+    self._camera = pi_camera_stream.setup_camera()
+
+
     # Make sure we release everything at exit
     atexit.register(self.shutdown)
 
         
   def shutdown(self):
-      self._motor.stop_all()
+      self.stop_all()
 
   def find_object(self, original_frame, low_range, high_range):
       """Find the largest enclosing circle for all contours in a masked image.
@@ -122,13 +136,13 @@ class Tom(object):
 
       # start the loop
       for frame in pi_camera_stream.start_stream(self._camera):
-        # Time to exit?
-        if callback() == False:
-          break
-          
         # Process the frame
         (x, y), radius = self.process_frame(frame, low_range, high_range)
         
+        # Time to exit?
+        if callback(radius) == False:
+          break
+          
         if radius > 20:
             # The size is the first error
             radius_error = self.correct_radius - radius
@@ -142,10 +156,11 @@ class Tom(object):
                   (radius, radius_error, direction_error, direction_value))
             
             # Now produce left and right motor speeds
-            self._motor.set_left(speed - direction_value)
-            self._motor.set_right(speed + direction_value)
+            self.set_left(speed - direction_value)
+            self.set_right(speed + direction_value)
         else:
-            self.stop_motors()
+            print("drive_to_colour:Stopping")
+            self.stop_all()
             break
   
   # Reads in the latest distance of a named ToF sensor.

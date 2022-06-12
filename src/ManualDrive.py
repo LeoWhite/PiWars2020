@@ -28,9 +28,11 @@ class ManualDriveBehaviour(object):
           if self._lid == 0:
             self._lid = 1;
             self._motor.set_servo(0, 1);
+            self._motor.set_servo(1, -1);
           else:
             self._lid = 0;
             self._motor.set_servo(0, -1);
+            self._motor.set_servo(1, 1);
  
 
         left_y, right_y = joystick['ly', 'ry']

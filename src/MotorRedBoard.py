@@ -23,19 +23,21 @@ class MotorRedBoard(MotorBase):
     def _left(self, speed):
         """ Sets the speed of the left motor, in the range of -1.0 to 1.0"""
         #print("_left"+str(speed))
-        self._redBoard.m0 = self._redBoard.m2 = speed
+        #self._redBoard.m0 = self._redBoard.m2 = speed
+        self._redBoard.m0 = speed
 
 
     def _right(self, speed):
         """ Sets the speed of the right motor, in the range of -1.0 to 1.0"""
         #print("_right"+str(speed))
-        self._redBoard.m1 = self._redBoard.m3 = speed
+        #self._redBoard.m1 = self._redBoard.m3 = speed
+        self._redBoard.m1 = speed
         
     def _set_servo(self, servo, range):
       if servo == 0:
-        self._redBoard.s20 = range
-      elif servo == 1:
         self._redBoard.s21 = range
+      elif servo == 1:
+        self._redBoard.s22 = range
         
 if __name__ == '__main__':
    import time

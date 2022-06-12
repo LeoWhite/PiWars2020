@@ -5,6 +5,7 @@ import socket
 import yaml
 import time
 
+from Tom import Tom
 from pi_controller import PIController
 from threading import Thread
 
@@ -19,7 +20,7 @@ from pi_controller import PIController
 
 # Defines and constants
 YAML_CONFIG_FILE='../config/config.yaml'
-MIN_SIDE_DISTANCE=100
+TROUGH_DISTANCE=100
 ColourStruct = namedtuple("ColourStruct", "colour low high")
 
 RED=ColourStruct("red", np.array([160,100,50]), np.array([179,255,255]))
@@ -38,103 +39,20 @@ BLUE=ColourStruct("blue", np.array([100,100,50]), np.array([120,255,255]))
 # A - Activate feeder
 # 0 - Barn
 # FULL ROUTE="U1ABL2ABR3AU"
-ROUTE="LR"
-
-
-# Thread that monitors for UDP packets in the background
-class UDPMonitorThread(Thread):
-    def __init__(self, UDPAddress, messageQueue):
-        Thread.__init__(self)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(UDPAddress)
-        self._messageQueue = messageQueue
-
-    def run(self):
-        while True:
-          data, addr = self.socket.recvfrom(1024)
-
-          message = json.loads(data)
-
-          if message["name"] == "front_left":
-            # Update list, signal main loop?
-            self._messageQueue.put_nowait(message)
+ROUTE="1"
 
 
 # Attempts to feed Hungry Cattle!
-class HungeryCattle(object):
-  def __init__(self, Motor, speed):
+class HungryCattle(object):
+  def __init__(self, tom, speed):
     # Configure the motors
-    self._motor = Motor
-
-    # Create a queue for passing messages
-    self._messageQueue = queue.Queue()
+    self._tom = tom
 
     # Cache the base speed
     self._speed = speed
     
-    # Read in the YAML config file
-    with open(YAML_CONFIG_FILE, 'r') as yaml_data_file:
-      self._config = yaml.safe_load(yaml_data_file)
-
-    # Work out the UDP Address to listen on
-    udpAddress = ( self._config["ToF"]["udp"]["address"], self._config["ToF"]["udp"]["port"] )
-
-    # Launch the UDP/ToF monitor
-    self._tofMonitor = UDPMonitorThread(udpAddress, self._messageQueue)
-    self._tofMonitor.daemon = True
-    self._tofMonitor.start()
-
-    # Make sure we release it at exit
-    atexit.register(self.shutdown)
-
-    # Throw away the first few results, to allow the sensor to settle down.
-    print("Waiting for ToF sensor to settle down")
-    count = 3
-    while count > 0:
-      message = self._messageQueue.get(True)
-      count = count - 1
-
-
-    def find_object(self, original_frame):
-        """Find the largest enclosing circle for all contours in a masked image.
-        Returns: the masked image, the object coordinates, the object radius"""
-        frame_hsv = cv2.cvtColor(original_frame, cv2.COLOR_BGR2HSV)
-        masked = cv2.inRange(frame_hsv, self.low_range, self.high_range)
-
-        # Find the contours of the image (outline points)
-        contour_image = np.copy(masked)
-        contours, _ = cv2.findContours(contour_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        # Find enclosing circles
-        circles = [cv2.minEnclosingCircle(cnt) for cnt in contours]
-        # Filter for the largest one
-        largest = (0, 0), 0
-        for (x, y), radius in circles:
-            if radius > largest[1]:
-                largest = (int(x), int(y)), int(radius)
-        return masked, largest[0], largest[1]
-
-
-    def process_frame(self, frame_orig):
-        # Crop the frame
-        frame = frame_orig[80:160, 0:320]
-        
-        #frame = frame_orig
-        # Find the largest enclosing circle
-        masked, coordinates, radius = self.find_object(frame)
-        # Now back to 3 channels for display
-        processed = cv2.cvtColor(masked, cv2.COLOR_GRAY2BGR)
-        # Draw our circle on the original frame, then display this
-        cv2.circle(frame, coordinates, radius, [255, 0, 0])
-#        self.make_display(frame, processed)
-        cv2.imshow('output',frame)
-        cv2.waitKey(1)
-        # Yield the object details
-        return coordinates, radius
         
   def run(self):
-    # start camera
-    camera = pi_camera_stream.setup_camera()
-
     # Create a PID controller
     controller = PIController(proportional_constant=0.01, integral_constant=0, windup_limit=0.5)
 
@@ -150,9 +68,31 @@ class HungeryCattle(object):
     for step in ROUTE:
       self.processStep(step)      
 
+  def driveCallback(self, radius):
 
-  def shutdown(self):
-      self._motor.stop_all()
+    # Read in the current distance
+    distance = self._tom.readToFSensor("front_left")
+
+    print("Distances: ", distance)
+    
+    # Is it an invalid request?
+    if distance < 0:
+      print("Invalid ToF sensor setup")
+      # Abort driving now
+      return False
+    # Distance too far, or out of date
+    elif distance == 0:
+      print("Invalid distance, continuing")
+      # Continue for now
+      # IMPROVE: Abort after X failures
+      return True
+    # Not yet close enough?
+    elif distance > TROUGH_DISTANCE:
+      print("Still driving")
+      return True
+     
+    print("Stopping")
+    return False
 
   def turn_90_degrees(self, direction):
     # Default speed = turn right
@@ -162,16 +102,40 @@ class HungeryCattle(object):
     if direction == 1:
       speed = -speed
     
-    self._motor.set_left(speed)
-    self._motor.set_right(-speed)
+    self._tom.set_left(speed)
+    self._tom.set_right(-speed)
     time.sleep(0.5)
-    self._motor.stop_all()
+    self._tom.stop_all()
     
+  def approach_trough(self, colour):
+    print("Seraching for colour {}".format(colour.colour))
+    # Search for the colour
+    for frame in pi_camera_stream.start_stream(self._tom._camera):
+      # Check for colour
+      (x, y), radius = self._tom.process_frame(frame, colour.low, colour.high)
+      
+      print("Radius {}".format(radius))
+      if radius > 20:
+        break
+    
+      # Turn 45 to next detection point
+      speed = 0.4
+      self._tom.set_left(-speed)
+      self._tom.set_right(speed)
+      time.sleep(0.1)
+      self._tom.stop_all()
+
+    # Now drive to the colour
+    self._tom.drive_to_colour(self.driveCallback, colour.low, colour.high, 0.3)
+    
+
   def processStep(self, step):
     if step == "L" :
         self.turn_90_degrees(1)
     elif step == "R" :
         self.turn_90_degrees(0)
+    elif step == "1" :
+        self.approach_trough(RED)
     else:
       print("Unknown step ["+step+"]")
 
@@ -180,6 +144,6 @@ class HungeryCattle(object):
 
 
 if __name__ == '__main__':
-  behaviour=HungeryCattle(Motor(), 0.5)
+  behaviour=HungryCattle(Tom(), 0.35)
   behaviour.run()
   
