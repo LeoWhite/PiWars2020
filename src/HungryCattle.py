@@ -41,8 +41,9 @@ BLUE=ColourStruct("blue", np.array([100,100,50]), np.array([120,255,255]))
 # 0 - Barn
 # FULL ROUTE="U1ABL2ABR3AU"
 ROUTE="1ABL2ABR3ABU0UR"
+#ROUTE="1"
 food_delivery_time=1.5
-food_delivery_extra=0.5
+food_delivery_extra=0.1
 
 
 
@@ -117,7 +118,7 @@ class HungryCattle(object):
     
     self._tom.set_left(speed)
     self._tom.set_right(-speed)
-    time.sleep(1.75)
+    time.sleep(1.5)
     self._tom.stop_all()
         
   def approach_trough(self, colour):
@@ -131,13 +132,17 @@ class HungryCattle(object):
 
     # Drive forwards for a bit, as if the distance is too far we get sensor reflection
     while self._tom.readToFSensor("front_left") < 300:
-      self._tom.set_left(self._speed)
-      self._tom.set_right(self._speed)
+      self._tom.set_left(self._speed * 1.5)
+      self._tom.set_right(self._speed * 1.5)
       time.sleep(0.05)
       
     print("driving to colour")
 
     self._tom.drive_to_colour(self.driveCallback, colour.low, colour.high, self._speed)
+
+    # Re-aim drive to the colour
+    print("reaiming")
+    self._tom.aim_at_colour(colour.low, colour.high, 1, self._speed)
     
     # Creep forwards
     while self._tom.readToFSensor("front_left") > TROUGH_LOADING_DISTANCE:
