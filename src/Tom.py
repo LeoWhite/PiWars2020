@@ -191,25 +191,23 @@ class Tom(Motor):
         if callback(radius) == False:
           break
           
-        if radius > 20:
-            # The size is the first error
-            radius_error = self.correct_radius - radius
-            #speed_value = speed_pid.get_value(radius_error)
-            # And the second error is the based on the center coordinate.
-            direction_error = self.center - x
-            direction_value = controller.get_value(direction_error)
-            
-            if self._debug:
-              print("radius: %d, radius_error: %d direction_error: %d, direction_value: %.2f speed %.2f" %
-                  (radius, radius_error, direction_error, direction_value, speed + direction_value))
-            
-            # Now produce left and right motor speeds
-            self.set_left(speed - direction_value)
-            self.set_right(speed + direction_value)
-        else:
-            print("drive_to_colour:Stopping")
-            self.stop_all()
-            break
+        # The size is the first error
+        radius_error = self.correct_radius - radius
+        #speed_value = speed_pid.get_value(radius_error)
+        # And the second error is the based on the center coordinate.
+        direction_error = self.center - x
+        direction_value = controller.get_value(direction_error)
+        
+        if self._debug:
+          print("radius: %d, radius_error: %d direction_error: %d, direction_value: %.2f speed %.2f" %
+              (radius, radius_error, direction_error, direction_value, speed + direction_value))
+        
+        # Now produce left and right motor speeds
+        self.set_left(speed - direction_value)
+        self.set_right(speed + direction_value)
+
+      print("drive_to_colour:Stopping")
+      self.stop_all()
   
   # Reads in the latest distance of a named ToF sensor.
   # Returns -1 if unknown sensor
