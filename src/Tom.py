@@ -111,7 +111,7 @@ class Tom(Motor):
 
   def process_frame(self, frame_orig, low_range, high_range):
       # Crop the frame to avoid distractions
-      frame = frame_orig[100:200, 0:320]
+      frame = frame_orig[80:200, 0:320]
 
       
       #frame = frame_orig
@@ -180,7 +180,7 @@ class Tom(Motor):
   
   def drive_to_colour(self, callback, low_range, high_range, speed=0.75):
       # Direction controller
-      controller = PIController(proportional_constant=0.0015, integral_constant=0.0000, windup_limit=400)
+      controller = PIController(proportional_constant=0.0015, integral_constant=0.0000, windup_limit=40)
 
       # start the loop
       for frame in pi_camera_stream.start_stream(self._camera):

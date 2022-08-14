@@ -40,10 +40,10 @@ BLUE=ColourStruct("blue", np.array([100,100,50]), np.array([120,255,255]))
 # A - Activate feeder
 # 0 - Barn
 # FULL ROUTE="U1ABL2ABR3AU"
-ROUTE="1ABL2ABR3ABU0UR"
+ROUTE="1ABL2ABRLR3ABU0UR"
 #ROUTE="1"
-food_delivery_time=1.5
-food_delivery_extra=0.1
+food_delivery_time=1.4
+food_delivery_extra=0.2
 
 
 
@@ -109,7 +109,7 @@ class HungryCattle(object):
     
     self._tom.set_left(speed)
     self._tom.set_right(-speed)
-    time.sleep(1)
+    time.sleep(1.1)
     self._tom.stop_all()
 
   def turn_180_degrees(self):
@@ -118,10 +118,11 @@ class HungryCattle(object):
     
     self._tom.set_left(speed)
     self._tom.set_right(-speed)
-    time.sleep(1.5)
+    time.sleep(1.75)
     self._tom.stop_all()
         
   def approach_trough(self, colour):
+    turn_direction = 1
     print("Seraching for colour {}".format(colour.colour))
 
 
@@ -132,6 +133,7 @@ class HungryCattle(object):
 
     # Drive forwards for a bit, as if the distance is too far we get sensor reflection
     while self._tom.readToFSensor("front_left") < 300:
+      print("ignoring {}".format(self._tom.readToFSensor("front_left")))
       self._tom.set_left(self._speed * 1.5)
       self._tom.set_right(self._speed * 1.5)
       time.sleep(0.05)
@@ -142,7 +144,10 @@ class HungryCattle(object):
 
     # Re-aim drive to the colour
     print("reaiming")
-    self._tom.aim_at_colour(colour.low, colour.high, 1, self._speed)
+    if colour == RED:
+      turn_direction = 0
+      
+    self._tom.aim_at_colour(colour.low, colour.high, turn_direction, self._speed)
     
     # Creep forwards
     while self._tom.readToFSensor("front_left") > TROUGH_LOADING_DISTANCE:
@@ -162,7 +167,7 @@ class HungryCattle(object):
 
 
     # Now drive to the colour
-    self._tom.aim_at_colour(RED.low, RED.high, 1, self._speed)
+    self._tom.aim_at_colour(RED.low, RED.high, 0, self._speed)
 
     # Drive forwards for a bit, as if the distance is too far we get sensor reflection
     while self._tom.readToFSensor("front_left") < 300:
